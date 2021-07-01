@@ -201,6 +201,24 @@ sti <- sti %>%
          gonorrhea_positive,
          chlamydia_positive)
 
+## HSV-2
+hsv <- read_csv(
+  here("raw", "KEMRI_Lumumba_fnl_CRF_csv_2019-07-29", "HSV2_EIAresults.csv")
+)
+
+hsv <- hsv %>%
+  mutate(hsv_collection_date = dmy(SS_Colldate),
+         visit_code = SS_visitcode,
+         hsv_serostatus = case_when(
+           ELISA < 0.9 ~ "Negative",
+           ELISA >= 0.9 & ELISA <= 3.5 ~ "Indeterminate",
+           ELISA > 3.5 ~ "Positive")
+         ) %>%
+  select(PTID,
+         hsv_collection_date,
+         visit_code,
+         hsv_serostatus)
+
 ## PrEP use
 prep <- read_csv(
   here("raw", "KEMRI_Lumumba_fnl_CRF_csv_2019-07-29", "data101.csv")
@@ -218,5 +236,5 @@ prep <- prep %>%
          using_prep)
 
 ## Save         
-save(dem, behav, sti, prep,
+save(dem, behav, sti, prep, hsv,
      file = here("output", "data", "echo_clean.RData"))
