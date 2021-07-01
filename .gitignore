@@ -4,6 +4,9 @@ doc/
 # Raw data
 raw/
 
+# Outputs
+output/
+
 # History files
 .Rhistory
 .Rapp.history
