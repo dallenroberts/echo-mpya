@@ -212,7 +212,8 @@ hsv <- hsv %>%
          hsv_serostatus = case_when(
            ELISA < 0.9 ~ "Negative",
            ELISA >= 0.9 & ELISA <= 3.5 ~ "Indeterminate",
-           ELISA > 3.5 ~ "Positive")
+           ELISA > 3.5 ~ "Positive"),
+         hsv_serostatus = factor(hsv_serostatus, levels = c("Negative", "Indeterminate", "Positive"))
          ) %>%
   select(PTID,
          hsv_collection_date,
