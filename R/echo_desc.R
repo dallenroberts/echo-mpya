@@ -34,7 +34,10 @@ all_vars <- behav %>%
   right_join(sti_comb, by = "PTID") %>%
   right_join(used_prep_during_study, by = "PTID") %>%
   mutate(age_group = cut(age, breaks = c(0, 20, 25, 30, 35), right = FALSE),
-         more_than_one_partner_past3mo = ifelse(num_partners_past3mo > 1, 1, 0),
+         more_than_one_partner_past3mo = case_when(
+           num_partners_past3mo <= 1 ~ 0L,
+           num_partners_past3mo > 1 ~ 1L,
+           is.na(num_partners_past3mo) ~ NA_integer_),
          voice_score =  2*(age < 25) +
                         2*(married == 0 & lives_with_partner == 0) +
                         drinks_alcohol +

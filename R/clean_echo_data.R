@@ -62,47 +62,70 @@ ba1 <- read_csv(
 ba1 <- ba1 %>%
   mutate(visit_date = dmy(BA1_VisitDate),
          visit_code = BA1_VisitCode,
-         seroconverter = ifelse(BA1_Seroconverter == "Checked", 1, 0),
-         has_pp_past3mo = ifelse(BA1_Past3MoPrimarySexPtnr == "Yes", 1, 0),
+         seroconverter = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_integer_,
+           BA1_Seroconverter == "Checked" ~ 1L,
+           BA1_Seroconverter == "Unchecked" ~ 0L
+         ),
+         has_pp_past3mo = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_integer_,
+           BA1_Past3MoPrimarySexPtnr == "Yes" ~ 1L, 
+           BA1_Past3MoPrimarySexPtnr == "No" ~ 0L
+           ),
          had_vag_sex_pp_past3mo = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_integer_,
            BA1_Past3MoVagSexPrimaryPtnr == "Yes" ~ 1L,
            BA1_Past3MoVagSexPrimaryPtnr == "No" ~ 0L,
-           has_pp_past3mo == 0 ~ NA_integer_),
+           has_pp_past3mo == 0 ~ NA_integer_
+           ),
          pp_circumcised = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_integer_,
            BA1_PrimaryPtnrCircumcised == "yes" ~ 1L,
            BA1_PrimaryPtnrCircumcised %in% c("no") ~ 0L,
            has_pp_past3mo == 0 ~ NA_integer_,
-           BA1_PrimaryPtnrCircumcised == "don't know" ~ NA_integer_),
+           BA1_PrimaryPtnrCircumcised == "don't know" ~ NA_integer_
+           ),
          pp_hiv_status = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_character_,
            BA1_HIVStatusPrimaryPtnr == "yes" ~ "Negative",
            BA1_HIVStatusPrimaryPtnr == "no" ~ "Positive",
            BA1_HIVStatusPrimaryPtnr == "don't know" ~ "Unsure",
-           BA1_HIVStatusPrimaryPtnr == "0" ~ NA_character_),
+           BA1_HIVStatusPrimaryPtnr == "0" ~ NA_character_
+           ),
          pp_on_art = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_character_,
            BA1_PrimaryPtnrTakingARVs == "yes" ~ "Yes",
            BA1_PrimaryPtnrTakingARVs == "no" ~ "No",
            BA1_PrimaryPtnrTakingARVs == "don't know" ~ "Unsure",
            TRUE ~ NA_character_),
          pp_same_past3mo = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_integer_,
            BA1_SamePrimarySexPtnrPast3Mo == "Yes" ~ 1L,
            BA1_SamePrimarySexPtnrPast3Mo == "No" ~ 0L,
-           has_pp_past3mo == 0 ~ NA_integer_),
+           has_pp_past3mo == 0 ~ NA_integer_
+           ),
          pp_sex_with_others = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_character_,
            BA1_PrimaryPtnrSexWOthers == "yes" ~ "Yes",
            BA1_PrimaryPtnrSexWOthers == "no" ~ "No",
            BA1_PrimaryPtnrSexWOthers == "don't know" ~ "Unsure",
-           has_pp_past3mo == 0 ~ NA_character_),
+           has_pp_past3mo == 0 ~ NA_character_
+           ),
          num_partners_past3mo = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_character_,
            BA1_TotalSexPtnrsPast3Mo == 0 ~ "0",
            BA1_TotalSexPtnrsPast3Mo == 1 ~ "1",
            BA1_TotalSexPtnrsPast3Mo > 1 ~ "2+",
-           TRUE ~ NA_character_),
+           TRUE ~ NA_character_
+           ),
          new_partner_past3mo = case_when(
+           BA1_CRFNotAdmin == "Checked" ~ NA_integer_,
            BA1_NewSexPtnerPast3Mo == "Yes" ~ 1L,
            BA1_NewSexPtnerPast3Mo == "No" ~ 0L,
            TRUE ~ NA_integer_)
          ) %>%
   select(PTID,
+         BA1_CRFNotAdmin,
          visit_date,
          visit_code,
          seroconverter,
@@ -124,24 +147,29 @@ ba2 <- ba2 %>%
   mutate(visit_date = dmy(BA2_VisitDate),
          visit_code = BA2_VisitCode,
          has_sex_for_money = case_when(
+           BA2_CRFNotAdmin == "Checked" ~ NA_integer_,
            BA2_SexForMoney == "Yes" ~ 1L,
            BA2_SexForMoney == "No" ~ 0L,
            TRUE ~ NA_integer_
          ),
          num_vag_sex_acts_last3mo = BA2_TotalTimesVagSex,
          condom_use_last3mo = case_when(
+           BA2_CRFNotAdmin == "Checked" ~ NA_character_,
            BA2_CondomUsed == 0 ~ NA_character_,
            TRUE ~ BA2_CondomUsed
          ),
          condom_use_last3mo = factor(condom_use_last3mo,
                                      levels = c("never", "rarely", "sometimes", "often", "always")),
          num_vag_sex_acts_last7days = case_when(
+           BA2_CRFNotAdmin == "Checked" ~ NA_real_,
            num_vag_sex_acts_last3mo == 0 ~ 0,
            TRUE ~ BA2_Past7DaysVagSex),
          num_vag_sex_acts_with_condom_last7days = case_when(
+           BA2_CRFNotAdmin == "Checked" ~ NA_real_,
            num_vag_sex_acts_last7days == 0 ~ NA_real_,
            TRUE ~ BA2_Past7DaysCondom),
          last_vag_sex = case_when(
+          BA2_CRFNotAdmin == "Checked" ~ NA_character_,
           num_vag_sex_acts_last3mo == 0 ~ ">= 14 days ago",
           TRUE ~ BA2_LastTimeVagSex),
          last_vag_sex = factor(last_vag_sex,
@@ -154,16 +182,22 @@ ba2 <- ba2 %>%
                                           "yesterday",
                                           "today")),
          used_condom_last_vag_sex = case_when(
+           BA2_CRFNotAdmin == "Checked" ~ NA_integer_,
            BA2_LastTimeCondomUsed == "Yes" ~ 1L,
            BA2_LastTimeCondomUsed == "No" ~ 0L,
            TRUE ~ NA_integer_),
-         had_anal_sex_last3mo = ifelse(BA2_AnalSex == 0, 0, 1),
+         had_anal_sex_last3mo = case_when(
+           BA2_CRFNotAdmin == "Checked" ~ NA_integer_,
+           BA2_AnalSex == 0 ~ 0L,
+           BA2_AnalSex > 0 ~ 1L),
          used_condom_last_anal_sex = case_when(
+           BA2_CRFNotAdmin == "Checked" ~ NA_integer_,
            had_anal_sex_last3mo == 0 ~ NA_integer_,
            BA2_AnalSexCondomUsed == "Yes" ~ 1L,
            BA2_AnalSexCondomUsed == "No" ~ 0L)
          ) %>%
   select(PTID,
+         BA2_CRFNotAdmin,
          visit_date,
          visit_code,
          has_sex_for_money,
@@ -187,10 +221,12 @@ sti <- sti %>%
   mutate(visit_date = dmy(LAB_VisitDate),
          visit_code = LAB_VisitCode,
          gonorrhea_positive = case_when(
+           LAB_CRFNotAdmin == "Checked" ~ NA_integer_,
            LAB_NGonorrhoeae == "positive" ~ 1L,
            LAB_NGonorrhoeae == "negative" ~ 0L,
            LAB_NGonorrhoeae %in% c("0", "not done") ~ NA_integer_),
          chlamydia_positive = case_when(
+           LAB_CRFNotAdmin == "Checked" ~ NA_integer_,
            LAB_CTrachomatis == "positive" ~ 1L,
            LAB_CTrachomatis == "negative" ~ 0L,
            LAB_CTrachomatis %in% c("0", "not done") ~ NA_integer_)
